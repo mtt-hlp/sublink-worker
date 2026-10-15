@@ -417,7 +417,7 @@ export const formLogicFn = (t) => {
 
                     // Scroll to results
                     setTimeout(() => {
-                        const resultsDiv = document.querySelector('.mt-12');
+                        const resultsDiv = document.querySelector('#results-section') || document.querySelector('.mt-12');
                         if (resultsDiv) {
                             resultsDiv.scrollIntoView({ behavior: 'smooth' });
                         }

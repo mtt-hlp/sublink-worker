@@ -46,18 +46,16 @@ export function createApp(bindings = {}) {
                 <div class="flex flex-col min-h-screen">
                     <Navbar />
                     <main class="flex-1">
-                        <div class="container mx-auto px-4 py-8 pt-24">
-                            <div class="max-w-4xl mx-auto">
-                                <div class="text-center mb-12 pt-8">
-                                    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
-                                        {APP_NAME}
-                                    </h1>
-                                    <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                                        {subtitle}
-                                    </p>
-                                </div>
-                                <Form t={t} lang={lang} />
+                        <div class="w-full max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-20">
+                            <div class="text-center mb-8 pt-2">
+                                <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">
+                                    {APP_NAME}
+                                </h1>
+                                <p class="text-base md:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                                    {subtitle}
+                                </p>
                             </div>
+                            <Form t={t} lang={lang} />
                         </div>
                     </main>
                     <UpdateChecker />
