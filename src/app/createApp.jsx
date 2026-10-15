@@ -4,7 +4,6 @@ import { Hono } from 'hono';
 import { Layout } from '../components/Layout.jsx';
 import { Navbar } from '../components/Navbar.jsx';
 import { Form } from '../components/Form.jsx';
-import { Footer } from '../components/Footer.jsx';
 import { UpdateChecker } from '../components/UpdateChecker.jsx';
 import { SingboxConfigBuilder } from '../builders/SingboxConfigBuilder.js';
 import { ClashConfigBuilder } from '../builders/ClashConfigBuilder.js';
@@ -61,7 +60,6 @@ export function createApp(bindings = {}) {
                             </div>
                         </div>
                     </main>
-                    <Footer />
                     <UpdateChecker />
                 </div>
             </Layout>

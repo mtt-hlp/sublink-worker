@@ -5,7 +5,7 @@ export const Layout = (props) => {
   const { title, children } = props
   return html`
     <!DOCTYPE html>
-    <html lang="en" x-data="appData()">
+    <html lang="en" x-data="appData()" :class="{ 'dark': darkMode }">
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,25 +13,21 @@ export const Layout = (props) => {
         <meta name="description" content="Convert and optimize your subscription links easily" />
         <meta name="keywords" content="${APP_KEYWORDS}" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <script>
+          (function() {
+            try {
+              var theme = localStorage.getItem('theme');
+              var isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+              if (isDark) {
+                document.documentElement.classList.add('dark');
+              } else {
+                document.documentElement.classList.remove('dark');
+              }
+            } catch (e) {}
+          })();
+        </script>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-        <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" onerror="window.__alpineFailed=true"></script>
-        <script>
-          window.__alpineLoaded = false;
-          document.addEventListener('alpine:init', () => { window.__alpineLoaded = true; });
-          window.addEventListener('DOMContentLoaded', () => {
-            if (window.__alpineFailed || !window.__alpineLoaded) {
-              console.error('Failed to initialize Alpine.js. Interactive features are disabled.');
-              const warning = document.createElement('div');
-              warning.className = 'fixed bottom-4 right-4 bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg shadow';
-              warning.textContent = '加载 Alpine.js 失败，页面交互功能不可用，请刷新或检查网络。';
-              document.body.appendChild(warning);
-            }
-          });
-        </script>
         <script>
           tailwind.config = {
             darkMode: 'class',
@@ -62,7 +58,24 @@ export const Layout = (props) => {
                 }
               }
             }
-          }
+          };
+        </script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" onerror="window.__alpineFailed=true"></script>
+        <script>
+          window.__alpineLoaded = false;
+          document.addEventListener('alpine:init', () => { window.__alpineLoaded = true; });
+          window.addEventListener('DOMContentLoaded', () => {
+            if (window.__alpineFailed || !window.__alpineLoaded) {
+              console.error('Failed to initialize Alpine.js. Interactive features are disabled.');
+              const warning = document.createElement('div');
+              warning.className = 'fixed bottom-4 right-4 bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg shadow';
+              warning.textContent = '加载 Alpine.js 失败，页面交互功能不可用，请刷新或检查网络。';
+              document.body.appendChild(warning);
+            }
+          });
         </script>
         <style>
           body {
@@ -128,7 +141,21 @@ export const Layout = (props) => {
               init() {
                 if (this.darkMode) {
                   document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
                 }
+                try {
+                  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    if (!localStorage.getItem('theme')) {
+                      this.darkMode = e.matches;
+                      if (e.matches) {
+                        document.documentElement.classList.add('dark');
+                      } else {
+                        document.documentElement.classList.remove('dark');
+                      }
+                    }
+                  });
+                } catch (_) {}
               }
             }
           }
