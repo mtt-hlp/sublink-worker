@@ -34,7 +34,17 @@ export const Form = (props) => {
     customShortCode: t('customShortCode'),
     optional: t('optional'),
     customShortCodePlaceholder: t('customShortCodePlaceholder'),
-    showFullLinks: t('showFullLinks')
+    showFullLinks: t('showFullLinks'),
+    copy: t('copy'),
+    subscriptionAndConfig: t('subscriptionAndConfig'),
+    configContent: t('configContent'),
+    shortUrlActive: t('shortUrlActive'),
+    previewConfig: t('previewConfig'),
+    loadingPreview: t('loadingPreview'),
+    copyContent: t('copyContent'),
+    downloadConfig: t('downloadConfig'),
+    refreshPreview: t('refreshPreview'),
+    previewFailed: t('previewFailed')
   };
 
   const scriptContent = `
@@ -341,74 +351,116 @@ class="px-6 py-3.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 bo
         </div>
       </form>
 
-  {/* Results Section */ }
+  {/* Results Section - Single Integrated Card */}
   <div x-cloak x-show="generatedLinks" x-data="{ copied: null }" {...{'x-transition:enter': 'transition ease-out duration-500', 'x-transition:enter-start': 'opacity-0 transform translate-y-8', 'x-transition:enter-end': 'opacity-100 transform translate-y-0'}} class="mt-12">
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8 transition-all duration-300 hover:shadow-md">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8 transition-all duration-300 hover:shadow-md space-y-6">
+      
+      {/* 1. 最上层：标题与格式切换 Tab */}
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <span class="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center">
-            <i class="fas fa-link text-sm"></i>
+          <span class="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center">
+            <i class="fas fa-layer-group text-sm"></i>
           </span>
-          {t('subscriptionLinks')}
+          {t('subscriptionAndConfig')}
         </h2>
+
+        {/* 格式切换 Tabs */}
+        <div class="flex items-center gap-1.5 p-1 bg-gray-100 dark:bg-gray-900 rounded-xl overflow-x-auto">
+          <button
+            type="button"
+            x-on:click="switchPreviewTab('clash')"
+            class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 cursor-pointer"
+            x-bind:class="previewFormat === 'clash' ? 'bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
+          >
+            <span>Clash</span>
+            <span class="text-[10px] opacity-70 font-mono">(YAML)</span>
+          </button>
+          <button
+            type="button"
+            x-on:click="switchPreviewTab('singbox')"
+            class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 cursor-pointer"
+            x-bind:class="previewFormat === 'singbox' ? 'bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
+          >
+            <span>SingBox</span>
+            <span class="text-[10px] opacity-70 font-mono">(JSON)</span>
+          </button>
+          <button
+            type="button"
+            x-on:click="switchPreviewTab('surge')"
+            class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 cursor-pointer"
+            x-bind:class="previewFormat === 'surge' ? 'bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
+          >
+            <span>Surge</span>
+            <span class="text-[10px] opacity-70 font-mono">(CONF)</span>
+          </button>
+          <button
+            type="button"
+            x-on:click="switchPreviewTab('xray')"
+            class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 cursor-pointer"
+            x-bind:class="previewFormat === 'xray' ? 'bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
+          >
+            <span>Xray</span>
+            <span class="text-[10px] opacity-70 font-mono">(Base64)</span>
+          </button>
+        </div>
       </div>
 
-      <div class="mt-6 space-y-4">
-        {LINK_FIELDS.map((field) => (
-          <div class="relative group" key={field.key}>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {t(field.labelKey)}
+      {/* 2. 下面：链接与短链管理 */}
+      <div class="space-y-4 bg-gray-50/70 dark:bg-gray-900/40 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+        {/* 当前格式的订阅链接展示与复制 */}
+        <div class="relative group">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span class="uppercase font-semibold text-primary-600 dark:text-primary-400" x-text="previewFormat"></span> {t('subscriptionLinks')}
             </label>
-            <div class="flex gap-2">
-              <input
-                type="text"
-                readonly
-                x-bind:value={`shortenedLinks ? shortenedLinks?.${field.key} : generatedLinks?.${field.key}`}
-                class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:border-transparent transition-all duration-200 font-mono text-sm"
-                x-bind:class="shortenedLinks ? 'text-primary-600 dark:text-primary-400 font-semibold focus:ring-primary-500' : 'text-gray-600 dark:text-gray-400 focus:ring-green-500'"
-              />
-              <button
-                type="button"
-                x-on:click={`navigator.clipboard.writeText((shortenedLinks || generatedLinks)?.${field.key}); copied = '${field.key}'; setTimeout(() => copied = null, 2000)`}
-                class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
-                x-bind:class={`{
-                  'hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-600 dark:hover:text-green-400': !shortenedLinks,
-                  'hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:text-primary-600 dark:hover:text-primary-400': shortenedLinks,
-                  'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400': !shortenedLinks && copied === '${field.key}',
-                  'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400': shortenedLinks && copied === '${field.key}'
-                }`}
-              >
-                <i class="fas" x-bind:class={`copied === '${field.key}' ? 'fa-check' : 'fa-copy'`}></i>
-              </button>
-            </div>
+            <span
+              x-show="shortenedLinks"
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-800"
+            >
+              {t('shortUrlActive')}
+            </span>
           </div>
-        ))}
-      </div>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              readonly
+              x-bind:value="shortenedLinks ? shortenedLinks[previewFormat] : (generatedLinks ? generatedLinks[previewFormat] : '')"
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:border-transparent transition-all duration-200 font-mono text-sm"
+              x-bind:class="shortenedLinks ? 'text-primary-600 dark:text-primary-400 font-semibold focus:ring-primary-500' : 'text-gray-700 dark:text-gray-300 focus:ring-green-500'"
+            />
+            <button
+              type="button"
+              x-on:click="navigator.clipboard.writeText((shortenedLinks || generatedLinks)[previewFormat]); copied = previewFormat; setTimeout(() => copied = null, 2000)"
+              class="px-4 py-2.5 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium cursor-pointer shadow-xs"
+              x-bind:class="{
+                'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700': copied !== previewFormat,
+                'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800': copied === previewFormat
+              }"
+            >
+              <i class="fas" x-bind:class="copied === previewFormat ? 'fa-check' : 'fa-copy'"></i>
+              <span x-text="copied === previewFormat ? window.APP_TRANSLATIONS.copied : window.APP_TRANSLATIONS.copy"></span>
+            </button>
+          </div>
+        </div>
 
-      {/* Shortening Controls */}
-      <div class="mt-6">
-        <div class="flex flex-col items-center gap-3">
-          <div class="w-full max-w-md">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 text-center">
-              {t('customShortCode')} <span class="text-gray-400">({t('optional')})</span>
-            </label>
+        {/* 短链管理 */}
+        <div class="pt-1 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="w-full sm:flex-1 max-w-md">
             <input
               type="text"
               x-model="customShortCode"
               placeholder={t('customShortCodePlaceholder')}
-              class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-center"
+              class="w-full px-3.5 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
             />
           </div>
-        </div>
-        <div class="flex justify-center mt-4">
           <button
             type="button"
             x-on:click="shortenedLinks ? shortenedLinks = null : shortenLinks()"
             x-bind:disabled="!shortenedLinks && shortening"
-            class="px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 shadow-lg"
+            class="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer shadow-xs"
             x-bind:class="shortenedLinks
-              ? 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm'
-              : 'bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 text-white shadow-primary-500/30 hover:shadow-primary-500/40 disabled:opacity-50 disabled:cursor-not-allowed'"
+              ? 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+              : 'bg-primary-600 hover:bg-primary-700 text-white shadow-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed'"
           >
             <i
               class="fas"
@@ -418,6 +470,89 @@ class="px-6 py-3.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 bo
               x-text="shortenedLinks ? showFullLinksText : (shortening ? shorteningText : shortenLinksText)"
             ></span>
           </button>
+        </div>
+      </div>
+
+      {/* 3. 再下面：配置文件内容 */}
+      <div class="space-y-3 pt-2">
+        <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-gray-800 dark:text-gray-200">{t('configContent')}</span>
+            <span class="font-mono uppercase px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium" x-text="previewFormat"></span>
+            <span x-show="previewCache[previewFormat]" x-text="`${(previewCache[previewFormat] || '').split('\\n').length} 行`"></span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              x-on:click="fetchPreview(previewFormat)"
+              x-bind:disabled="previewLoading"
+              class="px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1.5 cursor-pointer"
+              title={t('refreshPreview')}
+            >
+              <i class="fas fa-sync-alt" x-bind:class="previewLoading ? 'fa-spin' : ''"></i>
+              <span class="hidden sm:inline">{t('refreshPreview')}</span>
+            </button>
+            <button
+              type="button"
+              x-on:click="copyPreviewContent()"
+              x-bind:disabled="!previewCache[previewFormat] || previewLoading"
+              class="px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              x-bind:class="copiedPreview ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'"
+            >
+              <i class="fas" x-bind:class="copiedPreview ? 'fa-check' : 'fa-copy'"></i>
+              <span x-text="copiedPreview ? window.APP_TRANSLATIONS.copied : window.APP_TRANSLATIONS.copyContent"></span>
+            </button>
+            <button
+              type="button"
+              x-on:click="downloadPreviewConfig()"
+              x-bind:disabled="!previewCache[previewFormat] || previewLoading"
+              class="px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              title={t('downloadConfig')}
+            >
+              <i class="fas fa-download"></i>
+              <span class="hidden sm:inline">{t('downloadConfig')}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 配置文件内容展示区 - 增大高度 */}
+        <div class="relative">
+          {/* Loading Indicator */}
+          <div
+            x-show="previewLoading"
+            class="w-full h-[560px] rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/80 flex flex-col items-center justify-center gap-3"
+          >
+            <i class="fas fa-spinner fa-spin text-2xl text-primary-500"></i>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">{t('loadingPreview')}</span>
+          </div>
+
+          {/* Error Indicator */}
+          <div
+            x-show="!previewLoading && previewError"
+            class="w-full h-[560px] rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 p-6 flex flex-col items-center justify-center gap-3 text-center"
+          >
+            <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <p class="text-sm text-red-600 dark:text-red-400 font-medium" x-text="previewError"></p>
+            <button
+              type="button"
+              x-on:click="fetchPreview(previewFormat)"
+              class="mt-2 px-4 py-1.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-lg text-xs font-semibold hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors cursor-pointer"
+            >
+              <i class="fas fa-redo mr-1"></i> {t('refreshPreview')}
+            </button>
+          </div>
+
+          {/* Textarea View */}
+          <textarea
+            x-show="!previewLoading && !previewError"
+            readonly
+            x-bind:value="previewCache[previewFormat] || ''"
+            rows={26}
+            class="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-mono text-xs leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all min-h-[480px] h-[560px]"
+            placeholder="Waiting for config content..."
+          ></textarea>
         </div>
       </div>
     </div>

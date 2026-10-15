@@ -106,6 +106,12 @@ export const formLogicFn = (t) => {
             customShortCode: '',
             parsingUrl: false,
             parseDebounceTimer: null,
+            // Preview state
+            previewFormat: 'clash',
+            previewCache: {},
+            previewLoading: false,
+            previewError: '',
+            copiedPreview: false,
             // These will be populated from window.APP_TRANSLATIONS
             processingText: '',
             convertText: '',
@@ -347,6 +353,10 @@ export const formLogicFn = (t) => {
                     this.generatedLinks = null;
                     this.shortenedLinks = null;
                     this.customShortCode = '';
+                    this.previewCache = {};
+                    this.previewError = '';
+                    this.previewLoading = false;
+                    this.copiedPreview = false;
                     // Also clear from localStorage
                     localStorage.removeItem('customShortCode');
                 }
@@ -400,6 +410,11 @@ export const formLogicFn = (t) => {
                         surge: origin + '/surge?' + queryString
                     };
 
+                    // Reset and fetch current preview tab content
+                    this.previewCache = {};
+                    this.previewError = '';
+                    this.fetchPreview(this.previewFormat || 'clash');
+
                     // Scroll to results
                     setTimeout(() => {
                         const resultsDiv = document.querySelector('.mt-12');
@@ -414,6 +429,77 @@ export const formLogicFn = (t) => {
                 } finally {
                     this.loading = false;
                 }
+            },
+
+            switchPreviewTab(format) {
+                this.previewFormat = format;
+                if (!this.previewCache[format]) {
+                    this.fetchPreview(format);
+                }
+            },
+
+            async fetchPreview(format = this.previewFormat) {
+                if (!this.generatedLinks || !this.generatedLinks[format]) {
+                    return;
+                }
+                this.previewLoading = true;
+                this.previewError = '';
+                try {
+                    const response = await fetch(this.generatedLinks[format]);
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(errText || `Request failed with status ${response.status}`);
+                    }
+                    let text = await response.text();
+                    if (format === 'singbox') {
+                        try {
+                            const parsed = JSON.parse(text);
+                            text = JSON.stringify(parsed, null, 2);
+                        } catch (_) { }
+                    }
+                    this.previewCache = {
+                        ...this.previewCache,
+                        [format]: text
+                    };
+                } catch (error) {
+                    console.error(`Error fetching ${format} preview:`, error);
+                    this.previewError = error?.message || (window.APP_TRANSLATIONS?.previewFailed || 'Failed to load config');
+                } finally {
+                    this.previewLoading = false;
+                }
+            },
+
+            copyPreviewContent() {
+                const content = this.previewCache[this.previewFormat];
+                if (!content) return;
+                navigator.clipboard.writeText(content).then(() => {
+                    this.copiedPreview = true;
+                    setTimeout(() => {
+                        this.copiedPreview = false;
+                    }, 2000);
+                }).catch(() => {});
+            },
+
+            downloadPreviewConfig() {
+                const content = this.previewCache[this.previewFormat];
+                if (!content) return;
+                const extensions = {
+                    clash: 'yaml',
+                    singbox: 'json',
+                    surge: 'conf',
+                    xray: 'txt'
+                };
+                const ext = extensions[this.previewFormat] || 'txt';
+                const filename = `${this.previewFormat}.${ext}`;
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
             },
 
             async shortenLinks() {
