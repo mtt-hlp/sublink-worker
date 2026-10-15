@@ -79,7 +79,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 This project is for learning and exchange purposes only. Please do not use it for illegal purposes. All consequences resulting from the use of this project are solely the responsibility of the user and are not related to the developer.
 
-## ⭐ Star History
+## ⭐ Star History ⭐
 
 Thanks to everyone who has starred this project! 🌟
 
